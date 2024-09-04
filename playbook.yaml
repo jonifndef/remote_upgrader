@@ -1,0 +1,10 @@
+
+---
+- name: Remote upgrader
+  hosts: all
+  become: yes
+  vars_files:
+    - vault.yaml
+  tasks:
+    - name: Run ls -lah
+      command: ls -lah
