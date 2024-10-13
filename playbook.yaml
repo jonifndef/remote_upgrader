@@ -1,10 +1,44 @@
-
 ---
 - name: Remote upgrader
   hosts: all
   become: yes
+  serial: 1
   vars_files:
     - vault.yaml
+  ignore_unreachable: true
+  gather_facts: false
   tasks:
     - name: Run ls -lah
       command: ls -lah
+      register: output
+      ignore_errors: yes
+
+    - name: Display upgradable packages
+      debug:
+        msg: "{{ output.stdout_lines }}"
+      ignore_errors: yes
+
+    - name: Pause for user input
+      pause:
+        prompt: "Do you want to run the upgrade? (y/n)"
+      register: user_input
+      delegate_to: localhost
+
+    - name: Set user input fact
+      set_fact:
+        proceed: "{{ user_input.user_input }}"
+      delegate_to: localhost
+
+    - name: Debug user input
+      debug:
+        var: proceed
+
+    - name: Conditional task based on user input
+      command: echo "Running another command because you said yes"
+      when: proceed == 'y'
+      register: output_2
+
+    - name: Output other command
+      debug:
+        msg: "{{ output_2.stdout_lines }}"
+      ignore_errors: yes
